@@ -1,0 +1,85 @@
+{
+  "rules": {
+    "content": {
+      "whitelistedContents": {}, // arraylike content
+      "readBannedContent": {
+        "$contentId": { // arraylike
+          ".read": true
+        }
+      },
+      "writeBannedContent": {
+        "$contentId": { // arraylike
+          ".read": true
+        }
+      }
+    },
+    "entry": {
+      "byContentId": {
+        "$contentId": { // arraylike
+          ".read": "!root.child('content/readBannedContent').hasChild($contentId) && auth != null",
+          "$entryId": { // arraylike
+            ".write": "!root.child('content/writeBannedContent').hasChild($contentId) && auth != null && !data.exists()",
+            ".validate": "newData.hasChildren(['text', 'date', 'name', 'userId', 'isPublished'])",
+            "text": { // string
+              ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 100"
+            },
+            "date": {  // unix epoch
+              ".validate": "newData.val() <= now && newData.val() > (now - 600000)"
+            },
+            "name": { // string
+              ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 100"
+            },
+            "userId": { // valid user id, for legacy comments $legacy
+              ".validate": "newData.val() == auth.uid"
+            },
+            "isPublished": { // boolean
+              ".validate": "newData.val() == false"
+            },
+            "$other": {
+              ".validate": false
+            }
+          }
+        }
+      },
+      "toVerify": {
+        "$verifyCommentId": { // arraylike
+          ".write": "auth != null && !data.exists() && auth.uid == root.child('entry/byContentId').child(newData.child('contentId').val()).child(newData.child('entryId').val()).child('userId').val()",
+          ".validate": "newData.hasChildren(['contentId', 'entryId']) && root.child('entry/byContentId').child(newData.child('contentId').val()).child(newData.child('entryId').val()).child('isPublished').val() == false",
+          "contentId": {}, // string
+          "entryId": {}, // string
+          "$other": {
+            ".validate": false
+          }
+        }
+      }
+    },
+    "user": {
+      "$user_id": {
+        ".write": "$user_id === auth.uid",
+        ".read": "$user_id === auth.uid",
+        ".validate": "newData.hasChildren()",
+        "email": { // string
+          ".validate": "!newData.exists() || (newData.isString() && newData.val().length <= 100)"
+        },
+        "name": { // string
+          ".validate": "!newData.exists() || (newData.isString() && newData.val().length <= 100)"
+        },
+        "entryDraftByContentId": { // arraylike
+          ".validate": "!newData.exists() || newData.hasChildren()",
+          "$contentId": {
+            ".validate": "newData.hasChild('entry')",
+            "entry": { // string
+              ".validate": "!newData.exists() || (newData.isString() && newData.val().length <= 10000)"
+            },
+            "$other": {
+              ".validate": false
+            }
+          }
+        },
+        "$other": {
+          ".validate": false
+        }
+      }
+    }
+  }
+}

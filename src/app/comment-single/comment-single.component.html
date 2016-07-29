@@ -1,0 +1,8 @@
+<md-card *ngIf="showComment">
+  <md-card-subtitle>{{ comment.name }}</md-card-subtitle>
+  <md-card-content>
+    <p><em>{{ comment.date | date }}</em></p>
+    <p class="entry-text">{{ comment.text }}</p>
+    <p *ngIf="!comment.isPublished"><em>Right now, only you see this comment. It will be available to everyone once approved.</em></p>
+  </md-card-content>
+</md-card>
